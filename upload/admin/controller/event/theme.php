@@ -1,15 +1,19 @@
 <?php
-class ControllerEventTheme extends Controller {
-	public function index(&$route, &$args) {
-		// This is only here for compatibility with old templates
-		if (substr($route, -3) == 'tpl') {
-			$view = substr($route, 0, -3);
+namespace Opencart\Application\Controller\Event;
+class Theme extends \Opencart\System\Engine\Controller {
+	public function index(&$route, &$args, &$code) {
+		echo 'hi';
+
+
+
+		if (substr($filename, 0, 19) == 'extension/opencart/') {
+			$filename = substr($filename, 19);
 		}
-		
-		if (is_file(DIR_TEMPLATE . $route . '.twig')) {
-			$this->config->set('template_engine', 'twig');
-		} elseif (is_file(DIR_TEMPLATE . $route . '.tpl')) {
-			$this->config->set('template_engine', 'template');
-		}		
+
+		if (substr($route, 0, strpos('/')) == 'extension') {
+
+
+			//file_get_contents(EXTENSIONDIR_TEMPLATE . )
+		}
 	}
 }

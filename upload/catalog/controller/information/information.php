@@ -1,22 +1,23 @@
 <?php
-class ControllerInformationInformation extends Controller {
+namespace Opencart\Application\Controller\Information;
+class Information extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('information/information');
 
-		$this->load->model('catalog/information');
+		$data['breadcrumbs'] = [];
 
-		$data['breadcrumbs'] = array();
-
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/home')
-		);
+			'href' => $this->url->link('common/home', 'language=' . $this->config->get('config_language'))
+		];
 
 		if (isset($this->request->get['information_id'])) {
 			$information_id = (int)$this->request->get['information_id'];
 		} else {
 			$information_id = 0;
 		}
+
+		$this->load->model('catalog/information');
 
 		$information_info = $this->model_catalog_information->getInformation($information_id);
 
@@ -25,16 +26,16 @@ class ControllerInformationInformation extends Controller {
 			$this->document->setDescription($information_info['meta_description']);
 			$this->document->setKeywords($information_info['meta_keyword']);
 
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $information_info['title'],
-				'href' => $this->url->link('information/information', 'information_id=' .  $information_id)
-			);
+				'href' => $this->url->link('information/information', 'language=' . $this->config->get('config_language') . '&information_id=' .  $information_id)
+			];
 
 			$data['heading_title'] = $information_info['title'];
 
 			$data['description'] = html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8');
 
-			$data['continue'] = $this->url->link('common/home');
+			$data['continue'] = $this->url->link('common/home', 'language=' . $this->config->get('config_language'));
 
 			$data['column_left'] = $this->load->controller('common/column_left');
 			$data['column_right'] = $this->load->controller('common/column_right');
@@ -45,10 +46,10 @@ class ControllerInformationInformation extends Controller {
 
 			$this->response->setOutput($this->load->view('information/information', $data));
 		} else {
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $this->language->get('text_error'),
-				'href' => $this->url->link('information/information', 'information_id=' . $information_id)
-			);
+				'href' => $this->url->link('information/information', 'language=' . $this->config->get('config_language') . '&information_id=' . $information_id)
+			];
 
 			$this->document->setTitle($this->language->get('text_error'));
 
@@ -56,7 +57,7 @@ class ControllerInformationInformation extends Controller {
 
 			$data['text_error'] = $this->language->get('text_error');
 
-			$data['continue'] = $this->url->link('common/home');
+			$data['continue'] = $this->url->link('common/home', 'language=' . $this->config->get('config_language'));
 
 			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
 
@@ -87,6 +88,8 @@ class ControllerInformationInformation extends Controller {
 		if ($information_info) {
 			$output .= html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8') . "\n";
 		}
+
+		$this->response->addHeader('X-Robots-Tag: noindex');
 
 		$this->response->setOutput($output);
 	}

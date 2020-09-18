@@ -2,81 +2,123 @@
 <div id="content">
   <div class="page-header">
     <div class="container-fluid">
-      <div class="pull-right">
-        <button type="submit" form="form-user-group" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
-        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <div class="float-right">
+        <button type="submit" form="form-user-group" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fas fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-light"><i class="fas fa-reply"></i></a></div>
       <h1>{{ heading_title }}</h1>
-      <ul class="breadcrumb">
+      <ol class="breadcrumb">
         {% for breadcrumb in breadcrumbs %}
-        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
         {% endfor %}
-      </ul>
+      </ol>
     </div>
   </div>
   <div class="container-fluid">
     {% if error_warning %}
-    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-    {% endif %}
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_form }}</h3>
+      <div class="alert alert-danger alert-dismissible"><i class="fas fa-exclamation-circle"></i> {{ error_warning }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
       </div>
-      <div class="panel-body">
-        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-user-group" class="form-horizontal">
-          <div class="form-group required">
-            <label class="col-sm-2 control-label" for="input-name">{{ entry_name }}</label>
+    {% endif %}
+    <div class="card">
+      <div class="card-header"><i class="fas fa-pencil-alt"></i> {{ text_form }}</div>
+      <div class="card-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-user-group">
+          <div class="form-group row required">
+            <label for="input-name" class="col-sm-2 col-form-label">{{ entry_name }}</label>
             <div class="col-sm-10">
-              <input type="text" name="name" value="{{ name }}" placeholder="{{ entry_name }}" id="input-name" class="form-control" />
+              <input type="text" name="name" value="{{ name }}" placeholder="{{ entry_name }}" id="input-name" class="form-control"/>
               {% if error_name %}
-              <div class="text-danger">{{ error_name }}</div>
+                <div class="invalid-tooltip">{{ error_name }}</div>
               {% endif %}
             </div>
           </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{ entry_access }}</label>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label">{{ entry_permission }}</label>
             <div class="col-sm-10">
-              <div class="well well-sm" style="height: 150px; overflow: auto;">
-                {% for permission in permissions %}
-                <div class="checkbox">
-                  <label>
-                    {% if permission in access %}
-                    <input type="checkbox" name="permission[access][]" value="{{ permission }}" checked="checked" />
-                    {{ permission }}
-                    {% else %}
-                    <input type="checkbox" name="permission[access][]" value="{{ permission }}" />
-                    {{ permission }}
-                    {% endif %}
-                  </label>
-                </div>
-                {% endfor %}
+              <div id="user-group-permission" class="form-control" style="height: 250px; overflow: auto;">
+                <table class="table table-borderless table-striped">
+                  <thead>
+                    <tr>
+                      <td class="w-50"></td>
+                      <td>{{ text_access }}</label></td>
+                      <td>{{ text_modify }}</label></td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>{{ text_all }}</strong></td>
+                      <td><input type="checkbox" id="input-permission-access" onchange="$('#user-group-permission input[name^=\'permission[access]\']').prop('checked', $(this).prop('checked'));"/></td>
+                      <td><input type="checkbox" id="input-permission-modify" onchange="$('#user-group-permission input[name^=\'permission[modify]\']').prop('checked', $(this).prop('checked'));"/></td>
+                    </tr>
+                    {% for permission in permissions %}
+                      <tr>
+                        <td><label>{{ permission }}</label></td>
+                        <td>{% if permission in access %}
+                            <input type="checkbox" name="permission[access][]" value="{{ permission }}" checked="checked"/>
+                          {% else %}
+                            <input type="checkbox" name="permission[access][]" value="{{ permission }}"/>
+                          {% endif %}</td>
+                        <td>{% if permission in modify %}
+                            <input type="checkbox" name="permission[modify][]" value="{{ permission }}" checked="checked"/>
+                          {% else %}
+                            <input type="checkbox" name="permission[modify][]" value="{{ permission }}"/>
+                          {% endif %}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
-              <button type="button" onclick="$(this).parent().find(':checkbox').prop('checked', true);" class="btn btn-link">{{ text_select_all }}</button> / <button type="button" onclick="$(this).parent().find(':checkbox').prop('checked', false);" class="btn btn-link">{{ text_unselect_all }}</button></div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{ entry_modify }}</label>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label">{{ entry_extension }}</label>
             <div class="col-sm-10">
-              <div class="well well-sm" style="height: 150px; overflow: auto;">
-                {% for permission in permissions %}
-                <div class="checkbox">
-                  <label>
-                    {% if permission in modify %}
-                    <input type="checkbox" name="permission[modify][]" value="{{ permission }}" checked="checked" />
-                    {{ permission }}
-                    {% else %}
-                    <input type="checkbox" name="permission[modify][]" value="{{ permission }}" />
-                    {{ permission }}
-                    {% endif %}
-                  </label>
-                </div>
-                {% endfor %}
+              <div id="user-group-extension" class="form-control" style="height: 250px; overflow: auto;">
+                <table class="table table-borderless table-striped">
+                  <thead>
+                    <tr>
+                      <td class="w-50"></td>
+                      <td>{{ text_access }}</td>
+                      <td>{{ text_modify }}</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>{{ text_all }}</strong></td>
+                      <td><input type="checkbox" id="input-permission-access" onchange="$('#user-group-extension input[name^=\'permission[access]\']').prop('checked', $(this).prop('checked'));"/></td>
+                      <td><input type="checkbox" id="input-permission-modify" onchange="$('#user-group-extension input[name^=\'permission[modify]\']').prop('checked', $(this).prop('checked'));"/></td>
+                    </tr>
+                    {% for extension in extensions %}
+                      <tr>
+                        <td><label>{{ extension }}</label></td>
+                        <td>{% if extension in access %}
+                            <input type="checkbox" name="permission[access][]" value="{{ extension }}" checked="checked"/>
+                          {% else %}
+                            <input type="checkbox" name="permission[access][]" value="{{ extension }}"/>
+                          {% endif %}</td>
+                        <td>{% if extension in modify %}
+                            <input type="checkbox" name="permission[modify][]" value="{{ extension }}" checked="checked"/>
+                          {% else %}
+                            <input type="checkbox" name="permission[modify][]" value="{{ extension }}"/>
+                          {% endif %}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
-              <button type="button" onclick="$(this).parent().find(':checkbox').prop('checked', true);" class="btn btn-link">{{ text_select_all }}</button> / <button type="button" onclick="$(this).parent().find(':checkbox').prop('checked', false);" class="btn btn-link">{{ text_unselect_all }}</button></div>
+            </div>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
-{{ footer }} 
+<script type="text/javascript"><!--
+$('table tbody label').on('click', function() {
+	var checked = $(this).parent().parent().find(':checkbox:first').prop('checked');
+
+	$(this).parent().parent().find(':checkbox').prop('checked', !checked);
+	$(this).parent().parent().find(':checkbox').prop('checked', !checked);
+});
+//--></script>
+{{ footer }}

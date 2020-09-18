@@ -1,5 +1,6 @@
 <?php
-class ControllerMailReward extends Controller {
+namespace Opencart\Application\Controller\Mail;
+class Reward extends \Opencart\System\Engine\Controller {
 	public function index($route, $args, $output) {
 		if (isset($args[0])) {
 			$customer_id = $args[0];
@@ -42,10 +43,24 @@ class ControllerMailReward extends Controller {
 				$store_name = $this->config->get('config_name');
 			}
 
-			$data['text_received'] = sprintf($this->language->get('text_received'), $points);
-			$data['text_total'] = sprintf($this->language->get('text_total'), $this->model_customer_customer->getRewardTotal($customer_id));
+			$this->load->model('localisation/language');
 
-			$mail = new Mail($this->config->get('config_mail_engine'));
+			$language_info = $this->model_localisation_language->getLanguage($customer_info['language_id']);
+
+			if ($language_info) {
+				$language_code = $language_info['code'];
+			} else {
+				$language_code = $this->config->get('config_language');
+			}
+
+			$language = new \Opencart\Engine\Library\Language($language_code);
+			$language->load($language_code);
+			$language->load('mail/reward');
+
+			$data['text_received'] = sprintf($language->get('text_received'), $points);
+			$data['text_total'] = sprintf($language->get('text_total'), $this->model_customer_customer->getRewardTotal($customer_id));
+
+			$mail = new \Opencart\System\Library\Mail($this->config->get('config_mail_engine'));
 			$mail->protocol = $this->config->get('config_mail_protocol');
 			$mail->parameter = $this->config->get('config_mail_parameter');
 			$mail->smtp_hostname = $this->config->get('config_mail_smtp_hostname');
@@ -57,7 +72,7 @@ class ControllerMailReward extends Controller {
 			$mail->setTo($customer_info['email']);
 			$mail->setFrom($this->config->get('config_email'));
 			$mail->setSender(html_entity_decode($store_name, ENT_QUOTES, 'UTF-8'));
-			$mail->setSubject(sprintf($this->language->get('text_subject'), html_entity_decode($store_name, ENT_QUOTES, 'UTF-8')));
+			$mail->setSubject(sprintf($language->get('text_subject'), html_entity_decode($store_name, ENT_QUOTES, 'UTF-8')));
 			$mail->setText($this->load->view('mail/reward', $data));
 			$mail->send();
 		}

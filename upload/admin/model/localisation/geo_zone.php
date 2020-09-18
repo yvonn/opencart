@@ -1,7 +1,8 @@
 <?php
-class ModelLocalisationGeoZone extends Model {
+namespace Opencart\Application\Model\Localisation;
+class GeoZone extends \Opencart\System\Engine\Model {
 	public function addGeoZone($data) {
-		$this->db->query("INSERT INTO " . DB_PREFIX . "geo_zone SET name = '" . $this->db->escape($data['name']) . "', description = '" . $this->db->escape($data['description']) . "', date_added = NOW()");
+		$this->db->query("INSERT INTO " . DB_PREFIX . "geo_zone SET name = '" . $this->db->escape((string)$data['name']) . "', description = '" . $this->db->escape((string)$data['description']) . "', date_added = NOW()");
 
 		$geo_zone_id = $this->db->getLastId();
 
@@ -19,7 +20,7 @@ class ModelLocalisationGeoZone extends Model {
 	}
 
 	public function editGeoZone($geo_zone_id, $data) {
-		$this->db->query("UPDATE " . DB_PREFIX . "geo_zone SET name = '" . $this->db->escape($data['name']) . "', description = '" . $this->db->escape($data['description']) . "', date_modified = NOW() WHERE geo_zone_id = '" . (int)$geo_zone_id . "'");
+		$this->db->query("UPDATE " . DB_PREFIX . "geo_zone SET name = '" . $this->db->escape((string)$data['name']) . "', description = '" . $this->db->escape((string)$data['description']) . "', date_modified = NOW() WHERE geo_zone_id = '" . (int)$geo_zone_id . "'");
 
 		$this->db->query("DELETE FROM " . DB_PREFIX . "zone_to_geo_zone WHERE geo_zone_id = '" . (int)$geo_zone_id . "'");
 
@@ -47,14 +48,14 @@ class ModelLocalisationGeoZone extends Model {
 		return $query->row;
 	}
 
-	public function getGeoZones($data = array()) {
+	public function getGeoZones($data = []) {
 		if ($data) {
 			$sql = "SELECT * FROM " . DB_PREFIX . "geo_zone";
 
-			$sort_data = array(
+			$sort_data = [
 				'name',
 				'description'
-			);
+			];
 
 			if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
 				$sql .= " ORDER BY " . $data['sort'];

@@ -1,7 +1,8 @@
 <?php
-class ModelDesignBanner extends Model {
+namespace Opencart\Application\Model\Design;
+class Banner extends \Opencart\System\Engine\Model {
 	public function addBanner($data) {
-		$this->db->query("INSERT INTO " . DB_PREFIX . "banner SET name = '" . $this->db->escape($data['name']) . "', status = '" . (int)$data['status'] . "'");
+		$this->db->query("INSERT INTO " . DB_PREFIX . "banner SET name = '" . $this->db->escape((string)$data['name']) . "', status = '" . (int)$data['status'] . "'");
 
 		$banner_id = $this->db->getLastId();
 
@@ -17,7 +18,7 @@ class ModelDesignBanner extends Model {
 	}
 
 	public function editBanner($banner_id, $data) {
-		$this->db->query("UPDATE " . DB_PREFIX . "banner SET name = '" . $this->db->escape($data['name']) . "', status = '" . (int)$data['status'] . "' WHERE banner_id = '" . (int)$banner_id . "'");
+		$this->db->query("UPDATE " . DB_PREFIX . "banner SET name = '" . $this->db->escape((string)$data['name']) . "', status = '" . (int)$data['status'] . "' WHERE banner_id = '" . (int)$banner_id . "'");
 
 		$this->db->query("DELETE FROM " . DB_PREFIX . "banner_image WHERE banner_id = '" . (int)$banner_id . "'");
 
@@ -41,13 +42,13 @@ class ModelDesignBanner extends Model {
 		return $query->row;
 	}
 
-	public function getBanners($data = array()) {
+	public function getBanners($data = []) {
 		$sql = "SELECT * FROM " . DB_PREFIX . "banner";
 
-		$sort_data = array(
+		$sort_data = [
 			'name',
 			'status'
-		);
+		];
 
 		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
 			$sql .= " ORDER BY " . $data['sort'];
@@ -78,18 +79,18 @@ class ModelDesignBanner extends Model {
 		return $query->rows;
 	}
 
-	public function getBannerImages($banner_id) {
-		$banner_image_data = array();
+	public function getImages($banner_id) {
+		$banner_image_data = [];
 
 		$banner_image_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "banner_image WHERE banner_id = '" . (int)$banner_id . "' ORDER BY sort_order ASC");
 
 		foreach ($banner_image_query->rows as $banner_image) {
-			$banner_image_data[$banner_image['language_id']][] = array(
+			$banner_image_data[$banner_image['language_id']][] = [
 				'title'      => $banner_image['title'],
 				'link'       => $banner_image['link'],
 				'image'      => $banner_image['image'],
 				'sort_order' => $banner_image['sort_order']
-			);
+			];
 		}
 
 		return $banner_image_data;

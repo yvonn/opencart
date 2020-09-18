@@ -1,40 +1,45 @@
 <?php
-class ControllerAffiliateSuccess extends Controller {
+namespace Opencart\Application\Controller\Affiliate;
+class Success extends \Opencart\System\Engine\Controller {
 	public function index() {
+		if (!$this->config->get('config_affiliate_status')) {
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
+		}
+
 		$this->load->language('affiliate/success');
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
-		$data['breadcrumbs'] = array();
+		$data['breadcrumbs'] = [];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/home')
-		);
+			'href' => $this->url->link('common/home', 'language=' . $this->config->get('config_language'))
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_account'),
-			'href' => $this->url->link('account/account', '', true)
-		);
+			'href' => $this->url->link('account/account', 'language=' . $this->config->get('config_language'))
+		];
 
-		$data['breadcrumbs'][] = array(
-			'text' => $this->language->get('text_success'),
-			'href' => $this->url->link('affiliate/success')
-		);
+		$data['breadcrumbs'][] = [
+			'text' => $this->language->get('heading_title'),
+			'href' => $this->url->link('affiliate/success', 'language=' . $this->config->get('config_language'))
+		];
 
 		$this->load->model('account/customer_group');
 
 		$customer_group_info = $this->model_account_customer_group->getCustomerGroup($this->config->get('config_customer_group_id'));
 
 		if (!$this->config->get('config_affiliate_approval') && $this->customer->isLogged()) {
-			$data['text_message'] = sprintf($this->language->get('text_message'), $this->config->get('config_name'), $this->url->link('information/contact'));
+			$data['text_message'] = sprintf($this->language->get('text_success'), $this->config->get('config_name'), $this->url->link('information/contact', 'language=' . $this->config->get('config_language')));
 		} else {
-			$data['text_message'] = sprintf($this->language->get('text_approval'), $this->config->get('config_name'), $this->url->link('information/contact'));
+			$data['text_message'] = sprintf($this->language->get('text_approval'), $this->config->get('config_name'), $this->url->link('information/contact', 'language=' . $this->config->get('config_language')));
 		}
-		
+
 		$data['button_continue'] = $this->language->get('button_continue');
 
-		$data['continue'] = $this->url->link('account/account', '', true);
+		$data['continue'] = $this->url->link('account/account', 'language=' . $this->config->get('config_language'));
 
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['column_right'] = $this->load->controller('common/column_right');

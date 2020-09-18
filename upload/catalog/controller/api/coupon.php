@@ -1,17 +1,18 @@
 <?php
-class ControllerApiCoupon extends Controller {
+namespace Opencart\Application\Controller\Api;
+class Coupon extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('api/coupon');
 
 		// Delete past coupon in case there is an error
 		unset($this->session->data['coupon']);
 
-		$json = array();
+		$json = [];
 
 		if (!isset($this->session->data['api_id'])) {
 			$json['error'] = $this->language->get('error_permission');
 		} else {
-			$this->load->model('extension/total/coupon');
+			$this->load->model('extension/opencart/total/coupon');
 
 			if (isset($this->request->post['coupon'])) {
 				$coupon = $this->request->post['coupon'];

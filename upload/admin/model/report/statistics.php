@@ -1,5 +1,6 @@
 <?php
-class ModelReportStatistics extends Model {
+namespace Opencart\Application\Model\Report;
+class Statistics extends \Opencart\System\Engine\Model {
 	public function getStatistics() {
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "statistics");
 
@@ -19,12 +20,12 @@ class ModelReportStatistics extends Model {
 	public function addValue($code, $value) {
 		$this->db->query("UPDATE " . DB_PREFIX . "statistics SET `value` = (`value` + '" . (float)$value . "') WHERE `code` = '" . $this->db->escape($code) . "'");
 	}
-	
+
+	public function removeValue($code, $value) {
+		$this->db->query("UPDATE " . DB_PREFIX . "statistics SET `value` = (`value` - '" . (float)$value . "') WHERE `code` = '" . $this->db->escape($code) . "'");
+	}
+
 	public function editValue($code, $value) {
 		$this->db->query("UPDATE " . DB_PREFIX . "statistics SET `value` = '" . (float)$value . "' WHERE `code` = '" . $this->db->escape($code) . "'");
 	}
-		
-	public function removeValue($code, $value) {
-		$this->db->query("UPDATE " . DB_PREFIX . "statistics SET `value` = (`value` - '" . (float)$value . "') WHERE `code` = '" . $this->db->escape($code) . "'");
-	}	
 }

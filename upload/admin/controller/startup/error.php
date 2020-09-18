@@ -1,9 +1,10 @@
 <?php
-class ControllerStartupError extends Controller {
+namespace Opencart\Application\Controller\Startup;
+class Error extends \Opencart\System\Engine\Controller {
 	public function index() {
-		$this->registry->set('log', new Log($this->config->get('config_error_filename') ? $this->config->get('config_error_filename') : $this->config->get('error_filename')));
+		$this->registry->set('log', new \Opencart\System\Library\Log($this->config->get('config_error_filename') ? $this->config->get('config_error_filename') : $this->config->get('error_filename')));
 		
-		set_error_handler(array($this, 'handler'));	
+		set_error_handler([$this, 'handler']);
 	}
 	
 	public function handler($code, $message, $file, $line) {

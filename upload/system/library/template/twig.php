@@ -1,41 +1,61 @@
 <?php
-namespace Template;
-final class Twig {
-	private $twig;
-	private $data = array();
-	
+namespace Opencart\System\Library\Template;
+class Twig {
+	protected $loader;
+	protected $data = [];
+
 	public function __construct() {
-		// include and register Twig auto-loader
-		include_once(DIR_SYSTEM . 'library/template/Twig/Autoloader.php');
-		
-		\Twig_Autoloader::register();
+		$this->loader = new \Twig\Loader\FilesystemLoader();
 	}
-	
+
+	public function addPath($namespace, $directory) {
+		$this->loader->addPath($directory);
+	}
+
 	public function set($key, $value) {
 		$this->data[$key] = $value;
 	}
-	
-	public function render($template, $cache = false) {
-		// specify where to look for templates
-		$loader = new \Twig_Loader_Filesystem(DIR_TEMPLATE);
 
-		// initialize Twig environment
-		$config = array('autoescape' => false);
+	public function render($filename, $code = '') {
+		/*
+		 * FYI all the Twig lovers out there!
+		 * The Twig syntax is good, but the implementation and the available methods is a joke!
+		 *
+		 * All the Symfony developer has done is create a garbage frame work putting 3rd party scripts into DI containers.
+		 * The Twig syntax he ripped off from Jinja and Django templates then did a garbage implementation!
+		 *
+		 * The fact that this system cache is just compiling php into more php code instead of html is a disgrace!
+		 */
 
-		if ($cache) {
-			$config['cache'] = DIR_CACHE;
+		// render from modified template code
+		// Initialize Twig environment
+		$config = [
+			'charset'     => 'utf-8',
+			'autoescape'  => false,
+			'debug'       => false,
+			'auto_reload' => true,
+			'cache'       => DIR_CACHE . 'template/'
+		];
+
+		if ($code) {
+			$loader = new \Twig\Loader\ArrayLoader([$filename . '.twig' => $code]);
+		} else {
+			$loader = $this->loader;
 		}
 
-		$this->twig = new \Twig_Environment($loader, $config);
-		
+		//'extension/' .
+		if (substr($filename, 0, 19) == 'extension/opencart/') {
+			$filename = substr($filename, 19);
+		}
+
 		try {
-			// load template
-			$template = $this->twig->loadTemplate($template . '.twig');
-			
-			return $template->render($this->data);
-		} catch (Exception $e) {
-			trigger_error('Error: Could not load template ' . $template . '!');
-			exit();	
-		}	
-	}	
+			$twig = new \Twig\Environment($loader, $config);
+
+			return $twig->render($filename . '.twig', $this->data);
+		} catch (Twig_Error_Syntax $e) {
+			error_log('Error: Could not load template ' . $filename . '!');
+			exit();
+		}
+	}
+
 }

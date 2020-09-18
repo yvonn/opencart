@@ -1,5 +1,6 @@
 <?php
-class ModelLocalisationStockStatus extends Model {
+namespace Opencart\Application\Model\Localisation;
+class StockStatus extends \Opencart\System\Engine\Model {
 	public function addStockStatus($data) {
 		foreach ($data['stock_status'] as $language_id => $value) {
 			if (isset($stock_status_id)) {
@@ -38,7 +39,7 @@ class ModelLocalisationStockStatus extends Model {
 		return $query->row;
 	}
 
-	public function getStockStatuses($data = array()) {
+	public function getStockStatuses($data = []) {
 		if ($data) {
 			$sql = "SELECT * FROM " . DB_PREFIX . "stock_status WHERE language_id = '" . (int)$this->config->get('config_language_id') . "'";
 
@@ -80,13 +81,13 @@ class ModelLocalisationStockStatus extends Model {
 		}
 	}
 
-	public function getStockStatusDescriptions($stock_status_id) {
-		$stock_status_data = array();
+	public function getDescriptions($stock_status_id) {
+		$stock_status_data = [];
 
 		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "stock_status WHERE stock_status_id = '" . (int)$stock_status_id . "'");
 
 		foreach ($query->rows as $result) {
-			$stock_status_data[$result['language_id']] = array('name' => $result['name']);
+			$stock_status_data[$result['language_id']] = ['name' => $result['name']];
 		}
 
 		return $stock_status_data;

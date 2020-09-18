@@ -1,5 +1,6 @@
 <?php
-class ControllerStartupUpgrade extends Controller {
+namespace Opencart\Application\Controller\Startup;
+class Upgrade extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$upgrade = false;
 		

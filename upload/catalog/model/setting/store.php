@@ -1,6 +1,7 @@
 <?php
-class ModelSettingStore extends Model {
-	public function getStores($data = array()) {
+namespace Opencart\Application\Model\Setting;
+class Store extends \Opencart\System\Engine\Model {
+	public function getStores() {
 		$store_data = $this->cache->get('store');
 
 		if (!$store_data) {

@@ -1,11 +1,26 @@
 <?php
-class Request {
-	public $get = array();
-	public $post = array();
-	public $cookie = array();
-	public $files = array();
-	public $server = array();
+/**
+ * @package		OpenCart
+ * @author		Daniel Kerr
+ * @copyright	Copyright (c) 2005 - 2017, OpenCart, Ltd. (https://www.opencart.com/)
+ * @license		https://opensource.org/licenses/GPL-3.0
+ * @link		https://www.opencart.com
+*/
 
+/**
+* Request class
+*/
+namespace Opencart\System\Library;
+class Request {
+	public $get = [];
+	public $post = [];
+	public $cookie = [];
+	public $files = [];
+	public $server = [];
+	
+	/**
+	 * Constructor
+ 	*/
 	public function __construct() {
 		$this->get = $this->clean($_GET);
 		$this->post = $this->clean($_POST);
@@ -14,7 +29,13 @@ class Request {
 		$this->files = $this->clean($_FILES);
 		$this->server = $this->clean($_SERVER);
 	}
-
+	
+	/**
+     * 
+	 * @param	array	$data
+	 *
+     * @return	array
+     */
 	public function clean($data) {
 		if (is_array($data)) {
 			foreach ($data as $key => $value) {
@@ -23,7 +44,7 @@ class Request {
 				$data[$this->clean($key)] = $this->clean($value);
 			}
 		} else {
-			$data = htmlspecialchars($data, ENT_COMPAT, 'UTF-8');
+			$data = trim(htmlspecialchars($data, ENT_COMPAT, 'UTF-8'));
 		}
 
 		return $data;

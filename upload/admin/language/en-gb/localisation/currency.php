@@ -13,6 +13,7 @@ $_['text_iso']             = 'You can find a full list of ISO currency codes and
 $_['column_title']         = 'Currency Title';
 $_['column_code']          = 'Code';
 $_['column_value']         = 'Value';
+$_['column_status']        = 'Status';
 $_['column_date_modified'] = 'Last Updated';
 $_['column_action']        = 'Action';
 
@@ -27,7 +28,7 @@ $_['entry_status']         = 'Status';
 
 // Help
 $_['help_code']            = 'Do not change if this is your default currency.';
-$_['help_value']           = 'Set to 1.00000 if this is your default currency.';
+$_['help_value']           = 'The value of your default currency in the current currency unit. Set to 1 for your default currency.';
 
 // Error
 $_['error_permission']     = 'Warning: You do not have permission to modify currencies!';

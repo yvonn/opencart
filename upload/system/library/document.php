@@ -1,68 +1,148 @@
 <?php
+/**
+ * @package		OpenCart
+ * @author		Daniel Kerr
+ * @copyright	Copyright (c) 2005 - 2017, OpenCart, Ltd. (https://www.opencart.com/)
+ * @license		https://opensource.org/licenses/GPL-3.0
+ * @link		https://www.opencart.com
+*/
+
+/**
+* Document class
+*/
+namespace Opencart\System\Library;
 class Document {
 	private $title;
 	private $description;
 	private $keywords;
-	private $links = array();
-	private $styles = array();
-	private $scripts = array();
+	private $links = [];
+	private $styles = [];
+	private $scripts = [];
 
-	public function setTitle($title) {
+	/**
+     *
+     *
+     * @param	string	$title
+     */
+	public function setTitle(string $title) {
 		$this->title = $title;
 	}
 
+	/**
+     *
+	 *
+	 * @return	string
+     */
 	public function getTitle() {
 		return $this->title;
 	}
 
-	public function setDescription($description) {
+	/**
+     *
+     *
+     * @param	string	$description
+     */
+	public function setDescription(string $description) {
 		$this->description = $description;
 	}
 
+	/**
+     *
+     *
+     * @param	string	$description
+	 *
+	 * @return	string
+     */
 	public function getDescription() {
 		return $this->description;
 	}
 
-	public function setKeywords($keywords) {
+	/**
+     *
+     *
+     * @param	string	$keywords
+     */
+	public function setKeywords(string $keywords) {
 		$this->keywords = $keywords;
 	}
 
+	/**
+     *
+	 *
+	 * @return	string
+     */
 	public function getKeywords() {
 		return $this->keywords;
 	}
 
-	public function addLink($href, $rel) {
-		$this->links[$href] = array(
+	/**
+     *
+     *
+     * @param	string	$href
+	 * @param	string	$rel
+     */
+	public function addLink(string $href, string $rel) {
+		$this->links[$href] = [
 			'href' => $href,
 			'rel'  => $rel
-		);
+		];
 	}
 
+	/**
+     *
+	 *
+	 * @return	array
+     */
 	public function getLinks() {
 		return $this->links;
 	}
 
-	public function addStyle($href, $rel = 'stylesheet', $media = 'screen') {
-		$this->styles[$href] = array(
+	/**
+     *
+     *
+     * @param	string	$href
+	 * @param	string	$rel
+	 * @param	string	$media
+     */
+	public function addStyle(string $href, $rel = 'stylesheet', $media = 'screen') {
+		$this->styles[$href] = [
 			'href'  => $href,
 			'rel'   => $rel,
 			'media' => $media
-		);
+		];
 	}
 
+	/**
+     *
+	 *
+	 * @return	array
+     */
 	public function getStyles() {
 		return $this->styles;
 	}
 
-	public function addScript($href, $postion = 'header') {
-		$this->scripts[$postion][$href] = $href;
+	/**
+     *
+     *
+     * @param	string	$href
+	 * @param	string	$position
+     */
+	public function addScript(string $href, $position = 'header') {
+		$this->scripts[$position][$href] = $href;
 	}
 
-	public function getScripts($postion = 'header') {
-		if (isset($this->scripts[$postion])) {
-			return $this->scripts[$postion];
+	/**
+     *
+     *
+     * @param	string	$position
+	 *
+	 * @return	array
+     */
+	public function getScripts($position = 'header') {
+		if (isset($this->scripts[$position])) {
+			return $this->scripts[$position];
 		} else {
-			return array();
+			return [];
 		}
 	}
 }

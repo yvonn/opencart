@@ -1,9 +1,10 @@
 <?php
-class ControllerApiLogin extends Controller {
+namespace Opencart\Application\Controller\Api;
+class Login extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('api/login');
 
-		$json = array();
+		$json = [];
 
 		$this->load->model('account/api');
 
@@ -12,9 +13,9 @@ class ControllerApiLogin extends Controller {
 
 		if ($api_info) {
 			// Check if IP is allowed
-			$ip_data = array();
+			$ip_data = [];
 	
-			$results = $this->model_account_api->getApiIps($api_info['api_id']);
+			$results = $this->model_account_api->getIps($api_info['api_id']);
 	
 			foreach ($results as $result) {
 				$ip_data[] = trim($result['ip']);
@@ -26,11 +27,11 @@ class ControllerApiLogin extends Controller {
 				
 			if (!$json) {
 				$json['success'] = $this->language->get('text_success');
-				
-				$session = new Session($config->get('session_engine'), $registry);
+
+				$session = new \Opencart\Engine\Library\Session($this->config->get('session_engine'), $this->registry);
 				$session->start();
 				
-				$this->model_account_api->addApiSession($api_info['api_id'], $session->getId(), $this->request->server['REMOTE_ADDR']);
+				$this->model_account_api->addSession($api_info['api_id'], $session->getId(), $this->request->server['REMOTE_ADDR']);
 				
 				$session->data['api_id'] = $api_info['api_id'];
 				

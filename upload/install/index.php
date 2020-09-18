@@ -16,22 +16,26 @@ define('HTTP_OPENCART', $protocol . $_SERVER['HTTP_HOST'] . rtrim(rtrim(dirname(
 
 // DIR
 define('DIR_OPENCART', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../') . '/'));
-define('DIR_APPLICATION', str_replace('\\', '/', realpath(dirname(__FILE__))) . '/');
-define('DIR_SYSTEM', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../')) . '/system/');
+define('DIR_APPLICATION', DIR_OPENCART . 'install/');
+define('DIR_SYSTEM', DIR_OPENCART . 'system/');
+define('DIR_IMAGE', DIR_OPENCART . 'image/');
 define('DIR_STORAGE', DIR_SYSTEM . 'storage/');
-define('DIR_IMAGE', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../')) . '/image/');
 define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
 define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
-define('DIR_DATABASE', DIR_SYSTEM . 'database/');
 define('DIR_CONFIG', DIR_SYSTEM . 'config/');
 define('DIR_CACHE', DIR_SYSTEM . 'storage/cache/');
+define('DIR_DOWNLOAD', DIR_SYSTEM . 'storage/download/');
 define('DIR_LOGS', DIR_SYSTEM . 'storage/logs/');
 define('DIR_MODIFICATION', DIR_SYSTEM . 'storage/modification/');
-define('DIR_DOWNLOAD', DIR_SYSTEM . 'storage/download/');
 define('DIR_SESSION', DIR_SYSTEM . 'storage/session/');
 define('DIR_UPLOAD', DIR_SYSTEM . 'storage/upload/');
 
 // Startup
 require_once(DIR_SYSTEM . 'startup.php');
 
-start('install');
+// Autoloader
+$autoloader = new \Opencart\System\Engine\Autoloader();
+$autoloader->register('Opencart\Application', DIR_APPLICATION);
+$autoloader->register('Opencart\System', DIR_SYSTEM);
+
+Opencart\start('install');

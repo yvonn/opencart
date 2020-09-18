@@ -1,4 +1,16 @@
 <?php
+/**
+ * @package		OpenCart
+ * @author		Daniel Kerr
+ * @copyright	Copyright (c) 2005 - 2017, OpenCart, Ltd. (https://www.opencart.com/)
+ * @license		https://opensource.org/licenses/GPL-3.0
+ * @link		https://www.opencart.com
+*/
+
+/**
+* Image class
+*/
+namespace Opencart\System\Library;
 class Image {
 	private $file;
 	private $image;
@@ -7,6 +19,12 @@ class Image {
 	private $bits;
 	private $mime;
 
+	/**
+	 * Constructor
+	 *
+	 * @param	string	$file
+	 *
+ 	*/
 	public function __construct($file) {
 		if (!extension_loaded('gd')) {
 			exit('Error: PHP GD is not installed!');
@@ -30,34 +48,70 @@ class Image {
 				$this->image = imagecreatefromjpeg($file);
 			}
 		} else {
-			exit('Error: Could not load image ' . $file . '!');
+			error_log('Error: Could not load image ' . $file . '!');
 		}
 	}
-
+	
+	/**
+     * 
+	 * 
+	 * @return	string
+     */
 	public function getFile() {
 		return $this->file;
 	}
 
+	/**
+     * 
+	 * 
+	 * @return	array
+     */
 	public function getImage() {
 		return $this->image;
 	}
-
+	
+	/**
+     * 
+	 * 
+	 * @return	string
+     */
 	public function getWidth() {
 		return $this->width;
 	}
-
+	
+	/**
+     * 
+	 * 
+	 * @return	string
+     */
 	public function getHeight() {
 		return $this->height;
 	}
-
+	
+	/**
+     * 
+	 * 
+	 * @return	string
+     */
 	public function getBits() {
 		return $this->bits;
 	}
-
+	
+	/**
+     * 
+	 * 
+	 * @return	string
+     */
 	public function getMime() {
 		return $this->mime;
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	string	$file
+	 * @param	int		$quality
+     */
 	public function save($file, $quality = 90) {
 		$info = pathinfo($file);
 
@@ -75,7 +129,14 @@ class Image {
 			imagedestroy($this->image);
 		}
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	int	$width
+	 * @param	int	$height
+	 * @param	string	$default
+     */
 	public function resize($width = 0, $height = 0, $default = '') {
 		if (!$this->width || !$this->height) {
 			return;
@@ -111,7 +172,9 @@ class Image {
 		if ($this->mime == 'image/png') {
 			imagealphablending($this->image, false);
 			imagesavealpha($this->image, true);
+
 			$background = imagecolorallocatealpha($this->image, 255, 255, 255, 127);
+
 			imagecolortransparent($this->image, $background);
 		} else {
 			$background = imagecolorallocate($this->image, 255, 255, 255);
@@ -125,7 +188,13 @@ class Image {
 		$this->width = $width;
 		$this->height = $height;
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	string	$watermark
+	 * @param	string	$position
+     */
 	public function watermark($watermark, $position = 'bottomright') {
 		switch($position) {
 			case 'topleft':
@@ -166,13 +235,21 @@ class Image {
 				break;
 		}
 		
-		imagealphablending( $this->image, true );
-		imagesavealpha( $this->image, true );
+		imagealphablending( $this->image, true);
+		imagesavealpha( $this->image, true);
 		imagecopy($this->image, $watermark->getImage(), $watermark_pos_x, $watermark_pos_y, 0, 0, $watermark->getWidth(), $watermark->getHeight());
 
 		imagedestroy($watermark->getImage());
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	int		$top_x
+	 * @param	int		$top_y
+	 * @param	int		$bottom_x
+	 * @param	int		$bottom_y
+     */
 	public function crop($top_x, $top_y, $bottom_x, $bottom_y) {
 		$image_old = $this->image;
 		$this->image = imagecreatetruecolor($bottom_x - $top_x, $bottom_y - $top_y);
@@ -183,7 +260,13 @@ class Image {
 		$this->width = $bottom_x - $top_x;
 		$this->height = $bottom_y - $top_y;
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	int		$degree
+	 * @param	string	$color
+     */
 	public function rotate($degree, $color = 'FFFFFF') {
 		$rgb = $this->html2rgb($color);
 
@@ -192,32 +275,60 @@ class Image {
 		$this->width = imagesx($this->image);
 		$this->height = imagesy($this->image);
 	}
-
+	
+	/**
+     * 
+     *
+     */
 	private function filter() {
         $args = func_get_args();
 
         call_user_func_array('imagefilter', $args);
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	string	$text
+	 * @param	int		$x
+	 * @param	int		$y 
+	 * @param	int		$size
+	 * @param	string	$color
+     */
 	private function text($text, $x = 0, $y = 0, $size = 5, $color = '000000') {
 		$rgb = $this->html2rgb($color);
 
 		imagestring($this->image, $size, $x, $y, $text, imagecolorallocate($this->image, $rgb[0], $rgb[1], $rgb[2]));
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	object	$merge
+	 * @param	object	$x
+	 * @param	object	$y
+	 * @param	object	$opacity
+     */
 	private function merge($merge, $x = 0, $y = 0, $opacity = 100) {
 		imagecopymerge($this->image, $merge->getImage(), $x, $y, 0, 0, $merge->getWidth(), $merge->getHeight(), $opacity);
 	}
-
+	
+	/**
+     * 
+     *
+     * @param	string	$color
+	 * 
+	 * @return	array
+     */
 	private function html2rgb($color) {
 		if ($color[0] == '#') {
 			$color = substr($color, 1);
 		}
 
 		if (strlen($color) == 6) {
-			list($r, $g, $b) = array($color[0] . $color[1], $color[2] . $color[3], $color[4] . $color[5]);
+			list($r, $g, $b) = [$color[0] . $color[1], $color[2] . $color[3], $color[4] . $color[5]];
 		} elseif (strlen($color) == 3) {
-			list($r, $g, $b) = array($color[0] . $color[0], $color[1] . $color[1], $color[2] . $color[2]);
+			list($r, $g, $b) = [$color[0] . $color[0], $color[1] . $color[1], $color[2] . $color[2]];
 		} else {
 			return false;
 		}
@@ -226,6 +337,6 @@ class Image {
 		$g = hexdec($g);
 		$b = hexdec($b);
 
-		return array($r, $g, $b);
+		return [$r, $g, $b];
 	}
 }

@@ -1,86 +1,100 @@
 <?php
-class ControllerAccountAffiliate extends Controller {
-	private $error = array();
+namespace Opencart\Application\Controller\Account;
+class Affiliate extends \Opencart\System\Engine\Controller {
+	private $error = [];
 
 	public function add() {
-		if (!$this->customer->isLogged()) {
-			$this->session->data['redirect'] = $this->url->link('account/affiliate', '', true);
+		if (!$this->config->get('config_affiliate_status')) {
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
+		}
 
-			$this->response->redirect($this->url->link('affiliate/login', '', true));
+		if (!$this->customer->isLogged()) {
+			$this->session->data['redirect'] = $this->url->link('account/affiliate', 'language=' . $this->config->get('config_language'));
+
+			$this->response->redirect($this->url->link('affiliate/login', 'language=' . $this->config->get('config_language')));
 		}
 
 		$this->load->language('account/affiliate');
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
-		$this->load->model('account/customer');
+		$this->load->model('account/affiliate');
 
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			$this->model_account_customer->addAffiliate($this->customer->getId(), $this->request->post);
+			$this->model_account_affiliate->addAffiliate($this->customer->getId(), $this->request->post);
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('account/account', '', true));
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
 		}
-		
+
 		$this->getForm();
 	}
-	
+
 	public function edit() {
-		if (!$this->customer->isLogged()) {
-			$this->session->data['redirect'] = $this->url->link('account/affiliate', '', true);
+		if (!$this->config->get('config_affiliate_status')) {
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
+		}
 
-			$this->response->redirect($this->url->link('affiliate/login', '', true));
+		if (!$this->customer->isLogged()) {
+			$this->session->data['redirect'] = $this->url->link('account/affiliate', 'language=' . $this->config->get('config_language'));
+
+			$this->response->redirect($this->url->link('affiliate/login', 'language=' . $this->config->get('config_language')));
 		}
 
 		$this->load->language('account/affiliate');
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
-		$this->load->model('account/customer');
+		$this->load->model('account/affiliate');
 
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			$this->model_account_customer->editAffiliate($this->customer->getId(), $this->request->post);
+			$this->model_account_affiliate->editAffiliate($this->customer->getId(), $this->request->post);
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('account/account', '', true));
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
 		}
-		
+
 		$this->getForm();
 	}
-		
-	public function getForm() {
-		$data['breadcrumbs'] = array();
 
-		$data['breadcrumbs'][] = array(
+	protected function getForm() {
+		$this->document->addScript('catalog/view/javascript/jquery/datetimepicker/moment/moment.min.js');
+		$this->document->addScript('catalog/view/javascript/jquery/datetimepicker/moment/moment-with-locales.min.js');
+		$this->document->addScript('catalog/view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.js');
+		$this->document->addStyle('catalog/view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.css');
+
+		$data['breadcrumbs'] = [];
+
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/home')
-		);
+			'href' => $this->url->link('common/home', 'language=' . $this->config->get('config_language'))
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_account'),
-			'href' => $this->url->link('account/account', '', true)
-		);
+			'href' => $this->url->link('account/account', 'language=' . $this->config->get('config_language'))
+		];
 
 		if ($this->request->get['route'] == 'account/affiliate/add') {
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $this->language->get('text_affiliate'),
-				'href' => $this->url->link('account/affiliate/add', '', true)
-			);
+				'href' => $this->url->link('account/affiliate/add', 'language=' . $this->config->get('config_language'))
+			];
 		} else {
-			$data['breadcrumbs'][] = array(
+			$data['breadcrumbs'][] = [
 				'text' => $this->language->get('text_affiliate'),
-				'href' => $this->url->link('account/affiliate/edit', '', true)
-			);		
+				'href' => $this->url->link('account/affiliate/edit', 'language=' . $this->config->get('config_language'))
+			];
 		}
-	
+
 		if (isset($this->error['warning'])) {
 			$data['error_warning'] = $this->error['warning'];
 		} else {
 			$data['error_warning'] = '';
 		}
-				
+
 		if (isset($this->error['cheque'])) {
 			$data['error_cheque'] = $this->error['cheque'];
 		} else {
@@ -104,19 +118,19 @@ class ControllerAccountAffiliate extends Controller {
 		} else {
 			$data['error_bank_account_number'] = '';
 		}
-		
+
 		if (isset($this->error['custom_field'])) {
 			$data['error_custom_field'] = $this->error['custom_field'];
 		} else {
-			$data['error_custom_field'] = array();
+			$data['error_custom_field'] = [];
 		}
-				
-		$data['action'] = $this->url->link($this->request->get['route'], '', true);
-		
+
+		$data['action'] = $this->url->link($this->request->get['route'], 'language=' . $this->config->get('config_language'));
+
 		if ($this->request->get['route'] == 'account/affiliate/edit' && $this->request->server['REQUEST_METHOD'] != 'POST') {
-			$affiliate_info = $this->model_account_customer->getAffiliate($this->customer->getId());
+			$affiliate_info = $this->model_account_affiliate->getAffiliate($this->customer->getId());
 		}
-		
+
 		if (isset($this->request->post['company'])) {
 			$data['company'] = $this->request->post['company'];
 		} elseif (!empty($affiliate_info)) {
@@ -124,7 +138,7 @@ class ControllerAccountAffiliate extends Controller {
 		} else {
 			$data['company'] = '';
 		}
-		
+
 		if (isset($this->request->post['website'])) {
 			$data['website'] = $this->request->post['website'];
 		} elseif (!empty($affiliate_info)) {
@@ -132,7 +146,7 @@ class ControllerAccountAffiliate extends Controller {
 		} else {
 			$data['website'] = '';
 		}
-				
+
 		if (isset($this->request->post['tax'])) {
 			$data['tax'] = $this->request->post['tax'];
 		} elseif (!empty($affiliate_info)) {
@@ -208,17 +222,23 @@ class ControllerAccountAffiliate extends Controller {
 		// Custom Fields
 		$this->load->model('account/custom_field');
 
-		$data['custom_fields'] = $this->model_account_custom_field->getCustomFields($this->config->get('config_customer_group_id'));
+		$custom_fields = $this->model_account_custom_field->getCustomFields($this->config->get('config_customer_group_id'));
 
-		if (isset($this->request->post['custom_field'])) {
-			$data['affiliate_custom_field'] = $this->request->post['custom_field'];
+		foreach ($custom_fields as $custom_field) {
+			if ($custom_field['location'] == 'affiliate') {
+				$data['custom_fields'][] = $custom_field;
+			}
+		}
+
+		if (isset($this->request->post['custom_field']['affiliate'])) {
+			$data['affiliate_custom_field'] = $this->request->post['custom_field']['affiliate'];
 		} elseif (isset($affiliate_info)) {
 			$data['affiliate_custom_field'] = json_decode($affiliate_info['custom_field'], true);
 		} else {
-			$data['affiliate_custom_field'] = array();
+			$data['affiliate_custom_field'] = [];
 		}
 
-		$affiliate_info = $this->model_account_customer->getAffiliate($this->customer->getId());
+		$affiliate_info = $this->model_account_affiliate->getAffiliate($this->customer->getId());
 
 		if (!$affiliate_info && $this->config->get('config_affiliate_id')) {
 			$this->load->model('catalog/information');
@@ -226,7 +246,7 @@ class ControllerAccountAffiliate extends Controller {
 			$information_info = $this->model_catalog_information->getInformation($this->config->get('config_affiliate_id'));
 
 			if ($information_info) {
-				$data['text_agree'] = sprintf($this->language->get('text_agree'), $this->url->link('information/information/agree', 'information_id=' . $this->config->get('config_affiliate_id'), true), $information_info['title'], $information_info['title']);
+				$data['text_agree'] = sprintf($this->language->get('text_agree'), $this->url->link('information/information/agree', 'language=' . $this->config->get('config_language') . '&information_id=' . $this->config->get('config_affiliate_id')), $information_info['title']);
 			} else {
 				$data['text_agree'] = '';
 			}
@@ -239,8 +259,8 @@ class ControllerAccountAffiliate extends Controller {
 		} else {
 			$data['agree'] = false;
 		}
-		
-		$data['back'] = $this->url->link('account/account', '', true);
+
+		$data['back'] = $this->url->link('account/account', 'language=' . $this->config->get('config_language'));
 
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['column_right'] = $this->load->controller('common/column_right');
@@ -251,7 +271,7 @@ class ControllerAccountAffiliate extends Controller {
 
 		$this->response->setOutput($this->load->view('account/affiliate', $data));
 	}
-	
+
 	protected function validate() {
 		if ($this->request->post['payment'] == 'cheque' && !$this->request->post['cheque']) {
 			$this->error['cheque'] = $this->language->get('error_cheque');
@@ -261,12 +281,12 @@ class ControllerAccountAffiliate extends Controller {
 			if ($this->request->post['bank_account_name'] == '') {
 				$this->error['bank_account_name'] = $this->language->get('error_bank_account_name');
 			}
-	
+
 			if ($this->request->post['bank_account_number'] == '') {
 				$this->error['bank_account_number'] = $this->language->get('error_bank_account_number');
 			}
 		}
-		
+
 		// Custom field validation
 		$this->load->model('account/custom_field');
 
@@ -276,15 +296,15 @@ class ControllerAccountAffiliate extends Controller {
 			if ($custom_field['location'] == 'affiliate') {
 				if ($custom_field['required'] && empty($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']])) {
 					$this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
-				} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => $custom_field['validation'])))) {
+				} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/' . html_entity_decode($custom_field['validation'], ENT_QUOTES, 'UTF-8') . '/']])) {
 					$this->error['custom_field'][$custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
 				}
 			}
-		}			
-		
+		}
+
 		// Validate agree only if customer not already an affiliate
-		$affiliate_info = $this->model_account_customer->getAffiliate($this->customer->getId());
-				
+		$affiliate_info = $this->model_account_affiliate->getAffiliate($this->customer->getId());
+
 		if (!$affiliate_info && $this->config->get('config_affiliate_id')) {
 			$this->load->model('catalog/information');
 
@@ -296,5 +316,5 @@ class ControllerAccountAffiliate extends Controller {
 		}
 
 		return !$this->error;
-	}	
+	}
 }

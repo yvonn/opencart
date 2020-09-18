@@ -1,5 +1,6 @@
 <?php
-class ControllerStartupPermission extends Controller {
+namespace Opencart\Application\Controller\Startup;
+class Permission extends \Opencart\System\Engine\Controller {
 	public function index() {
 		if (isset($this->request->get['route'])) {
 			$route = '';
@@ -14,40 +15,25 @@ class ControllerStartupPermission extends Controller {
 				$route .= '/' . $part[1];
 			}
 
-			// If a 3rd part is found we need to check if its under one of the extension folders.
-			$extension = array(
-				'extension/dashboard',
-				'extension/analytics',
-				'extension/captcha',
-				'extension/extension',
-				'extension/feed',
-				'extension/fraud',
-				'extension/module',
-				'extension/payment',
-				'extension/shipping',
-				'extension/theme',
-				'extension/total',
-				'extension/report',
-                'extension/openbay'
-			);
-
-			if (isset($part[2]) && in_array($route, $extension)) {
+			if ($part[0] == 'extension' && isset($part[2]) && isset($part[3])) {
 				$route .= '/' . $part[2];
+				$route .= '/' . $part[3];
 			}
 
 			// We want to ingore some pages from having its permission checked.
-			$ignore = array(
+			$ignore = [
 				'common/dashboard',
 				'common/login',
 				'common/logout',
 				'common/forgotten',
 				'common/reset',
+				'common/cron',
 				'error/not_found',
 				'error/permission'
-			);
+			];
 
 			if (!in_array($route, $ignore) && !$this->user->hasPermission('access', $route)) {
-				return new Action('error/permission');
+				return new \Opencart\System\Engine\Action('error/permission');
 			}
 		}
 	}

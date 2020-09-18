@@ -1,7 +1,8 @@
 <?php
-class ModelSettingEvent extends Model {
+namespace Opencart\Application\Model\Setting;
+class Event extends \Opencart\System\Engine\Model {
 	public function addEvent($code, $trigger, $action, $status = 1, $sort_order = 0) {
-		$this->db->query("INSERT INTO `" . DB_PREFIX . "event` SET `code` = '" . $this->db->escape($code) . "', `trigger` = '" . $this->db->escape($trigger) . "', `action` = '" . $this->db->escape($action) . "', `sort_order` = '" . (int)$sort_order . "', `status` = '" . (int)$status . "'");
+		$this->db->query("INSERT INTO `" . DB_PREFIX . "event` SET `code` = '" . $this->db->escape($code) . "', `trigger` = '" . $this->db->escape($trigger) . "', `action` = '" . $this->db->escape($action) . "', `status` = '" . (int)$status . "', `sort_order` = '" . (int)$sort_order . "'");
 	
 		return $this->db->getLastId();
 	}
@@ -14,12 +15,8 @@ class ModelSettingEvent extends Model {
 		$this->db->query("DELETE FROM `" . DB_PREFIX . "event` WHERE `code` = '" . $this->db->escape($code) . "'");
 	}
 
-	public function enableEvent($event_id) {
-		$this->db->query("UPDATE `" . DB_PREFIX . "event` SET `status` = '1' WHERE event_id = '" . (int)$event_id . "'");
-	}
-	
-	public function disableEvent($event_id) {
-		$this->db->query("UPDATE `" . DB_PREFIX . "event` SET `status` = '0' WHERE event_id = '" . (int)$event_id . "'");
+	public function editStatus($event_id, $status) {
+		$this->db->query("UPDATE `" . DB_PREFIX . "event` SET `status` = '" . (int)$status . "' WHERE `event_id` = '" . (int)$event_id . "'");
 	}
 	
 	public function uninstall($type, $code) {
@@ -28,7 +25,7 @@ class ModelSettingEvent extends Model {
 	}
 
 	public function getEvent($event_id) {
-		$query = $this->db->query("SELECT DISTINCT * FROM `" . DB_PREFIX . "event` WHERE `event_id` = '" . (int)$event_id . "' LIMIT 1");
+		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "event` WHERE `event_id` = '" . (int)$event_id . "'");
 
 		return $query->row;
 	}
@@ -39,17 +36,17 @@ class ModelSettingEvent extends Model {
 		return $query->row;
 	}
 		
-	public function getEvents($data = array()) {
+	public function getEvents($data = []) {
 		$sql = "SELECT * FROM `" . DB_PREFIX . "event`";
 
-		$sort_data = array(
+		$sort_data = [
 			'code',
 			'trigger',
 			'action',
 			'sort_order',
 			'status',
 			'date_added'
-		);
+		];
 
 		if (isset($data['sort']) && in_array($data['sort'], $sort_data)) {
 			$sql .= " ORDER BY `" . $data['sort'] . "`";

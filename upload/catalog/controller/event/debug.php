@@ -1,21 +1,24 @@
 <?php
-class ControllerEventDebug extends Controller {
+namespace Opencart\Application\Controller\Event;
+class Debug extends \Opencart\System\Engine\Controller {
 	public function before(&$route, &$args) {
-		if ($route == 'common/home') { // add the route you want to test
-			$this->session->data['debug'][$route] = microtime();		
-		}
+		// add the route you want to test
+		//if ($route == 'common/home') {
+			$this->session->data['debug'][$route] = microtime(true);
+		//}
 	}
 	
 	public function after($route, &$args, &$output) {
-		if ($route == 'common/home') { // add the route you want to test
+		// add the route you want to test
+		//if ($route == 'common/home') {
 			if (isset($this->session->data['debug'][$route])) {
-				$log_data = array(
+				$log_data = [
 					'route' => $route,
-					'time'  => microtime() - $this->session->data['debug'][$route]
-				);
+					'time'  => microtime(true) - $this->session->data['debug'][$route]
+				];
 				
 				$this->log->write($log_data);
 			}
-		}
+		//}
 	}	
 }

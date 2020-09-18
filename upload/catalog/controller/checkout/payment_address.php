@@ -1,5 +1,6 @@
 <?php
-class ControllerCheckoutPaymentAddress extends Controller {
+namespace Opencart\Application\Controller\Checkout;
+class PaymentAddress extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('checkout/checkout');
 
@@ -30,8 +31,8 @@ class ControllerCheckoutPaymentAddress extends Controller {
 		$data['countries'] = $this->model_localisation_country->getCountries();
 
 		// Custom Fields
-		$data['custom_fields'] = array();
-		
+		$data['custom_fields'] = [];
+
 		$this->load->model('account/custom_field');
 
 		$custom_fields = $this->model_account_custom_field->getCustomFields($this->config->get('config_customer_group_id'));
@@ -45,8 +46,10 @@ class ControllerCheckoutPaymentAddress extends Controller {
 		if (isset($this->session->data['payment_address']['custom_field'])) {
 			$data['payment_address_custom_field'] = $this->session->data['payment_address']['custom_field'];
 		} else {
-			$data['payment_address_custom_field'] = array();
+			$data['payment_address_custom_field'] = [];
 		}
+
+		$data['shipping_required'] = $this->cart->hasShipping();
 
 		$this->response->setOutput($this->load->view('checkout/payment_address', $data));
 	}
@@ -54,16 +57,16 @@ class ControllerCheckoutPaymentAddress extends Controller {
 	public function save() {
 		$this->load->language('checkout/checkout');
 
-		$json = array();
+		$json = [];
 
 		// Validate if customer is logged in.
 		if (!$this->customer->isLogged()) {
-			$json['redirect'] = $this->url->link('checkout/checkout', '', true);
+			$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language')));
 		}
 
 		// Validate cart has products and has stock.
 		if ((!$this->cart->hasProducts() && empty($this->session->data['vouchers'])) || (!$this->cart->hasStock() && !$this->config->get('config_stock_checkout'))) {
-			$json['redirect'] = $this->url->link('checkout/cart');
+			$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/cart', 'language=' . $this->config->get('config_language')));
 		}
 
 		// Validate minimum quantity requirements.
@@ -79,7 +82,7 @@ class ControllerCheckoutPaymentAddress extends Controller {
 			}
 
 			if ($product['minimum'] > $product_total) {
-				$json['redirect'] = $this->url->link('checkout/cart');
+				$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/cart', 'language=' . $this->config->get('config_language')));
 
 				break;
 			}
@@ -87,7 +90,7 @@ class ControllerCheckoutPaymentAddress extends Controller {
 
 		if (!$json) {
 			$this->load->model('account/address');
-							
+
 			if (isset($this->request->post['payment_address']) && $this->request->post['payment_address'] == 'existing') {
 				if (empty($this->request->post['address_id'])) {
 					$json['error']['warning'] = $this->language->get('error_address');
@@ -143,7 +146,7 @@ class ControllerCheckoutPaymentAddress extends Controller {
 					if ($custom_field['location'] == 'address') {
 						if ($custom_field['required'] && empty($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']])) {
 							$json['error']['custom_field' . $custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
-						} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => $custom_field['validation'])))) {
+						} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/' . html_entity_decode($custom_field['validation'], ENT_QUOTES, 'UTF-8') . '/']])) {
 							$json['error']['custom_field' . $custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
 						}
 					}
@@ -155,9 +158,9 @@ class ControllerCheckoutPaymentAddress extends Controller {
 					$this->session->data['payment_address'] = $this->model_account_address->getAddress($address_id);
 
 					// If no default address ID set we use the last address
-					if (!$this->customer->getAddressId()) {
+					if ($this->customer->isLogged() && !$this->customer->getAddressId()) {
 						$this->load->model('account/customer');
-						
+
 						$this->model_account_customer->editAddressId($this->customer->getId(), $address_id);
 					}
 

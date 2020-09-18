@@ -1,5 +1,6 @@
 <?php
-class ControllerCheckoutGuestShipping extends Controller {
+namespace Opencart\Application\Controller\Checkout;
+class GuestShipping extends \Opencart\System\Engine\Controller {
 	public function index() {
 		$this->load->language('checkout/checkout');
 
@@ -63,7 +64,7 @@ class ControllerCheckoutGuestShipping extends Controller {
 
 		// Custom Fields
 		$this->load->model('account/custom_field');
-		
+
 		$custom_fields = $this->model_account_custom_field->getCustomFields($this->session->data['guest']['customer_group_id']);
 
 		foreach ($custom_fields as $custom_field) {
@@ -71,34 +72,34 @@ class ControllerCheckoutGuestShipping extends Controller {
 				$data['custom_fields'][] = $custom_field;
 			}
 		}
-		
+
 		if (isset($this->session->data['shipping_address']['custom_field'])) {
 			$data['address_custom_field'] = $this->session->data['shipping_address']['custom_field'];
 		} else {
-			$data['address_custom_field'] = array();
+			$data['address_custom_field'] = [];
 		}
-		
+
 		$this->response->setOutput($this->load->view('checkout/guest_shipping', $data));
 	}
 
 	public function save() {
 		$this->load->language('checkout/checkout');
 
-		$json = array();
+		$json = [];
 
 		// Validate if customer is logged in.
 		if ($this->customer->isLogged()) {
-			$json['redirect'] = $this->url->link('checkout/checkout', '', true);
+			$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language')));
 		}
 
 		// Validate cart has products and has stock.
 		if ((!$this->cart->hasProducts() && empty($this->session->data['vouchers'])) || (!$this->cart->hasStock() && !$this->config->get('config_stock_checkout'))) {
-			$json['redirect'] = $this->url->link('checkout/cart');
+			$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/cart', 'language=' . $this->config->get('config_language')));
 		}
 
 		// Check if guest checkout is available.
 		if (!$this->config->get('config_checkout_guest') || $this->config->get('config_customer_price') || $this->cart->hasDownload()) {
-			$json['redirect'] = $this->url->link('checkout/checkout', '', true);
+			$json['redirect'] = str_replace('&amp;', '&', $this->url->link('checkout/checkout', 'language=' . $this->config->get('config_language')));
 		}
 
 		if (!$json) {
@@ -140,10 +141,10 @@ class ControllerCheckoutGuestShipping extends Controller {
 			$custom_fields = $this->model_account_custom_field->getCustomFields($this->session->data['guest']['customer_group_id']);
 
 			foreach ($custom_fields as $custom_field) {
-				if ($custom_field['location'] == 'address') { 
+				if ($custom_field['location'] == 'address') {
 					if ($custom_field['required'] && empty($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']])) {
 						$json['error']['custom_field' . $custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
-					} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, array('options' => array('regexp' => $custom_field['validation'])))) {
+					} elseif (($custom_field['type'] == 'text') && !empty($custom_field['validation']) && !filter_var($this->request->post['custom_field'][$custom_field['location']][$custom_field['custom_field_id']], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/' . html_entity_decode($custom_field['validation'], ENT_QUOTES, 'UTF-8') . '/']])) {
 						$json['error']['custom_field' . $custom_field['custom_field_id']] = sprintf($this->language->get('error_custom_field'), $custom_field['name']);
 					}
 				}
@@ -192,7 +193,7 @@ class ControllerCheckoutGuestShipping extends Controller {
 			if (isset($this->request->post['custom_field'])) {
 				$this->session->data['shipping_address']['custom_field'] = $this->request->post['custom_field']['address'];
 			} else {
-				$this->session->data['shipping_address']['custom_field'] = array();
+				$this->session->data['shipping_address']['custom_field'] = [];
 			}
 
 			unset($this->session->data['shipping_method']);

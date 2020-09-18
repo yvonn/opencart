@@ -1,171 +1,263 @@
 <?php
-// Registry
-$registry = new Registry();
+namespace Opencart;
+function start($application) {
+	// Autoloader
+	$autoloader = new System\Engine\Autoloader();
 
-// Config
-$config = new Config();
-$config->load('default');
-$config->load($application_config);
-$registry->set('config', $config);
+	// Registry
+	$registry = new System\Engine\Registry();
+	$registry->set('autoloader', $autoloader);
 
-// Log
-$log = new Log($config->get('error_filename'));
-$registry->set('log', $log);
+	// Config
+	$config = new System\Engine\Config();
 
-date_default_timezone_set($config->get('date_timezone'));
+	// Load the default config
+	$config->load('default');
+	$config->load($application);
+	$registry->set('config', $config);
 
-set_error_handler(function($code, $message, $file, $line) use($log, $config) {
-	// error suppressed with @
-	if (error_reporting() === 0) {
-		return false;
-	}
+	// Log
+	$log = new System\Library\Log($config->get('error_filename'));
+	$registry->set('log', $log);
 
-	switch ($code) {
-		case E_NOTICE:
-		case E_USER_NOTICE:
-			$error = 'Notice';
-			break;
-		case E_WARNING:
-		case E_USER_WARNING:
-			$error = 'Warning';
-			break;
-		case E_ERROR:
-		case E_USER_ERROR:
-			$error = 'Fatal Error';
-			break;
-		default:
-			$error = 'Unknown';
-			break;
-	}
+	date_default_timezone_set($config->get('date_timezone'));
 
-	if ($config->get('error_display')) {
-		echo '<b>' . $error . '</b>: ' . $message . ' in <b>' . $file . '</b> on line <b>' . $line . '</b>';
-	}
+	set_error_handler(function ($code, $message, $file, $line) use ($log, $config) {
+		// error suppressed with @
+		if (error_reporting() === 0) {
+			return false;
+		}
 
-	if ($config->get('error_log')) {
-		$log->write('PHP ' . $error . ':  ' . $message . ' in ' . $file . ' on line ' . $line);
-	}
+		switch ($code) {
+			case E_NOTICE:
+			case E_USER_NOTICE:
+				$error = 'Notice';
+				break;
+			case E_WARNING:
+			case E_USER_WARNING:
+				$error = 'Warning';
+				break;
+			case E_ERROR:
+			case E_USER_ERROR:
+				$error = 'Fatal Error';
+				break;
+			default:
+				$error = 'Unknown';
+				break;
+		}
 
-	return true;
-});
+		if ($config->get('error_display')) {
+			echo '<b>' . $error . '</b>: ' . $message . ' in <b>' . $file . '</b> on line <b>' . $line . '</b>';
+		}
 
-// Event
-$event = new Event($registry);
-$registry->set('event', $event);
+		if ($config->get('error_log')) {
+			$log->write('PHP ' . $error . ':  ' . $message . ' in ' . $file . ' on line ' . $line);
+		}
 
-// Event Register
-if ($config->has('action_event')) {
-	foreach ($config->get('action_event') as $key => $value) {
-		foreach ($value as $priority => $action) {
-			$event->register($key, new Action($action), $priority);
+		return true;
+	});
+
+	set_exception_handler(function ($e) use ($log, $config) {
+		if ($config->get('error_display')) {
+			echo '<b>' . get_class($e) . '</b>: ' . $e->getMessage() . ' in <b>' . $e->getFile() . '</b> on line <b>' . $e->getLine() . '</b>';
+		}
+
+		if ($config->get('error_log')) {
+			$log->write(get_class($e) . ':  ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+		}
+	});
+
+	// Event
+	$event = new System\Engine\Event($registry);
+	$registry->set('event', $event);
+
+	// Event Register
+	if ($config->has('action_event')) {
+		foreach ($config->get('action_event') as $key => $value) {
+			foreach ($value as $priority => $action) {
+				$event->register($key, new System\Engine\Action($action), $priority);
+			}
 		}
 	}
-}
 
-// Loader
-$loader = new Loader($registry);
-$registry->set('load', $loader);
+	// Loader
+	$loader = new System\Engine\Loader($registry);
+	$registry->set('load', $loader);
 
-// Request
-$registry->set('request', new Request());
+	// Request
+	$request = new System\Library\Request();
+	$registry->set('request', $request);
 
-// Response
-$response = new Response();
-$response->addHeader('Content-Type: text/html; charset=utf-8');
-$response->setCompression($config->get('config_compression'));
-$registry->set('response', $response);
+	// Response
+	$response = new System\Library\Response();
+	foreach ($config->get('response_header') as $header) {
+		$response->addHeader($header);
+	}
+	$response->setCompression($config->get('response_compression'));
+	$registry->set('response', $response);
 
-// Database
-if ($config->get('db_autostart')) {
-	$registry->set('db', new DB($config->get('db_engine'), $config->get('db_hostname'), $config->get('db_username'), $config->get('db_password'), $config->get('db_database'), $config->get('db_port')));
-}
+	// Database
+	if ($config->get('db_autostart')) {
+		$db = new System\Library\DB($config->get('db_engine'), $config->get('db_hostname'), $config->get('db_username'), $config->get('db_password'), $config->get('db_database'), $config->get('db_port'));
+		$registry->set('db', $db);
 
-// Session
-$session = new Session($config->get('session_engine'), $registry);
-$registry->set('session', $session);
+		// Sync PHP and DB time zones
+		$db->query("SET time_zone = '" . $db->escape(date('P')) . "'");
+	}
 
-if ($config->get('session_autostart')) {
-	/*
-	We are adding the session cookie outside of the session class as I believe
-	PHP messed up in a big way handling sessions. Why in the hell is it so hard to
-	have more than one concurrent session using cookies!
+	// Session
+	$session = new System\Library\Session($config->get('session_engine'), $registry);
+	$registry->set('session', $session);
 
-	Is it not better to have multiple cookies when accessing parts of the system
-	that requires different cookie sessions for security reasons.
+	if ($config->get('session_autostart')) {
+		/*
+		We are adding the session cookie outside of the session class as I believe
+		PHP messed up in a big way handling sessions. Why in the hell is it so hard to
+		have more than one concurrent session using cookies!
 
-	Also cookies can be accessed via the URL parameters. So why force only one cookie
-	for all sessions!
-	*/
+		Is it not better to have multiple cookies when accessing parts of the system
+		that requires different cookie sessions for security reasons.
 
-	if (isset($_COOKIE[$config->get('session_name')])) {
-		$session_id = $_COOKIE[$config->get('session_name')];
+		Also cookies can be accessed via the URL parameters. So why force only one cookie
+		for all sessions!
+		*/
+
+		if (isset($_COOKIE[$config->get('session_name')])) {
+			$session_id = $_COOKIE[$config->get('session_name')];
+		} else {
+			$session_id = '';
+		}
+
+		$session->start($session_id);
+
+		// Require higher security for session cookies
+		$option = [
+			'max-age' => time() + $config->get('session_expire'),
+			'path' => !empty($_SERVER['PHP_SELF']) ? dirname($_SERVER['PHP_SELF']) . '/' : '',
+			'domain' => $_SERVER['HTTP_HOST'],
+			'secure' => $_SERVER['HTTPS'],
+			'httponly' => false,
+			'SameSite' => 'strict'
+		];
+
+		oc_setcookie($config->get('session_name'), $session->getId(), $option);
+	}
+
+	// Cache
+	$registry->set('cache', new System\Library\Cache($config->get('cache_engine'), $config->get('cache_expire')));
+
+	// Url
+	$registry->set('url', new System\Library\Url($config->get('site_url')));
+
+	// Language
+	$registry->set('language', new System\Library\Language($config->get('language_directory')));
+
+	// Document
+	$registry->set('document', new System\Library\Document());
+
+	// Config Autoload
+	if ($config->has('config_autoload')) {
+		foreach ($config->get('config_autoload') as $value) {
+			$loader->config($value);
+		}
+	}
+
+	// Language Autoload
+	if ($config->has('language_autoload')) {
+		foreach ($config->get('language_autoload') as $value) {
+			$loader->language($value);
+		}
+	}
+
+	// Helper Autoload
+	if ($config->has('helper_autoload')) {
+		foreach ($config->get('helper_autoload') as $value) {
+			$loader->helper($value);
+		}
+	}
+
+	// Library Autoload
+	if ($config->has('library_autoload')) {
+		foreach ($config->get('library_autoload') as $value) {
+			$loader->library($value);
+		}
+	}
+
+	// Model Autoload
+	if ($config->has('model_autoload')) {
+		foreach ($config->get('model_autoload') as $value) {
+			$loader->model($value);
+		}
+	}
+
+	// Route
+	if (!empty($request->get['route'])) {
+		$action = new System\Engine\Action((string)$request->get['route']);
 	} else {
-		$session_id = '';
+		$action = new System\Engine\Action($config->get('action_default'));
 	}
 
-	$session->start($session_id);
+	// Action error object to execute if any other actions can not be executed.
+	$error = new System\Engine\Action($config->get('action_error'));
 
-	setcookie($config->get('session_name'), $session->getId(), ini_get('session.cookie_lifetime'), ini_get('session.cookie_path'), ini_get('session.cookie_domain'));
-}
+	$pre_actions = $config->get('action_pre_action');
 
-// Cache
-$registry->set('cache', new Cache($config->get('cache_engine'), $config->get('cache_expire')));
+	// So the pre-actions can be changed or triggered.
+	//$event->trigger('pre_action', array(&$pre_actions));
 
-// Url
-if ($config->get('url_autostart')) {
-	$registry->set('url', new Url($config->get('site_url'), $config->get('site_ssl')));
-}
+	// Pre Actions
+	foreach ($pre_actions as $pre_action) {
+		$pre_action = new System\Engine\Action($pre_action);
 
-// Language
-$language = new Language($config->get('language_directory'));
-$registry->set('language', $language);
+		$result = $pre_action->execute($registry);
 
-// OpenBay Pro
-$registry->set('openbay', new Openbay($registry));
+		if ($result instanceof System\Engine\Action) {
+			$action = $result;
 
-// Document
-$registry->set('document', new Document());
+			break;
+		}
 
-// Config Autoload
-if ($config->has('config_autoload')) {
-	foreach ($config->get('config_autoload') as $value) {
-		$loader->config($value);
+		// If action can not be executed then we return an action error object.
+		if ($result instanceof Exception) {
+			$action = $error;
+
+			$error = '';
+			break;
+		}
 	}
-}
 
-// Language Autoload
-if ($config->has('language_autoload')) {
-	foreach ($config->get('language_autoload') as $value) {
-		$loader->language($value);
+	// Dispatch
+	while ($action) {
+		// Get the route path of the object to be executed.
+		$route = $action->getId();
+
+		$args = [];
+
+		// Keep the original trigger.
+		$trigger = $action->getId();
+
+		$event->trigger('controller/' . $trigger . '/before', [&$route, &$args]);
+
+		// Execute the action.
+		$result = $action->execute($registry, $args);
+
+		$action = '';
+
+		if ($result instanceof \System\Engine\Action) {
+			$action = $result;
+		}
+
+		// If action can not be executed then we return the action error object.
+		if ($result instanceof Exception) {
+			$action = $error;
+
+			// In case there is an error we don't want to infinitely keep calling the action error object.
+			$error = '';
+		}
+
+		$event->trigger('controller/' . $trigger . '/after', [&$route, &$args, &$output]);
 	}
+
+	// Output
+	$response->output();
 }
-
-// Library Autoload
-if ($config->has('library_autoload')) {
-	foreach ($config->get('library_autoload') as $value) {
-		$loader->library($value);
-	}
-}
-
-// Model Autoload
-if ($config->has('model_autoload')) {
-	foreach ($config->get('model_autoload') as $value) {
-		$loader->model($value);
-	}
-}
-
-// Route
-$route = new Router($registry);
-
-// Pre Actions
-if ($config->has('action_pre_action')) {
-	foreach ($config->get('action_pre_action') as $value) {
-		$route->addPreAction(new Action($value));
-	}
-}
-
-// Dispatch
-$route->dispatch(new Action($config->get('action_router')), new Action($config->get('action_error')));
-
-// Output
-$response->output();

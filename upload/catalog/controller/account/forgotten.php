@@ -1,10 +1,11 @@
 <?php
-class ControllerAccountForgotten extends Controller {
-	private $error = array();
+namespace Opencart\Application\Controller\Account;
+class Forgotten extends \Opencart\System\Engine\Controller {
+	private $error = [];
 
 	public function index() {
 		if ($this->customer->isLogged()) {
-			$this->response->redirect($this->url->link('account/account', '', true));
+			$this->response->redirect($this->url->link('account/account', 'language=' . $this->config->get('config_language')));
 		}
 
 		$this->load->language('account/forgotten');
@@ -14,29 +15,33 @@ class ControllerAccountForgotten extends Controller {
 		$this->load->model('account/customer');
 
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			$this->model_account_customer->editCode($this->request->post['email'], token(40));
+			$customer_info = $this->model_account_customer->getCustomerByEmail($this->request->post['email']);
+
+			if ($customer_info) {
+				$this->model_account_customer->editCode($this->request->post['email'], token(40));
+			}
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('account/login', '', true));
+			$this->response->redirect($this->url->link('account/login', 'language=' . $this->config->get('config_language')));
 		}
 
-		$data['breadcrumbs'] = array();
+		$data['breadcrumbs'] = [];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/home')
-		);
+			'href' => $this->url->link('common/home', 'language=' . $this->config->get('config_language'))
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_account'),
-			'href' => $this->url->link('account/account', '', true)
-		);
+			'href' => $this->url->link('account/account', 'language=' . $this->config->get('config_language'))
+		];
 
-		$data['breadcrumbs'][] = array(
+		$data['breadcrumbs'][] = [
 			'text' => $this->language->get('text_forgotten'),
-			'href' => $this->url->link('account/forgotten', '', true)
-		);
+			'href' => $this->url->link('account/forgotten', 'language=' . $this->config->get('config_language'))
+		];
 
 		if (isset($this->error['warning'])) {
 			$data['error_warning'] = $this->error['warning'];
@@ -44,9 +49,9 @@ class ControllerAccountForgotten extends Controller {
 			$data['error_warning'] = '';
 		}
 
-		$data['action'] = $this->url->link('account/forgotten', '', true);
+		$data['action'] = $this->url->link('account/forgotten', 'language=' . $this->config->get('config_language'));
 
-		$data['back'] = $this->url->link('account/login', '', true);
+		$data['back'] = $this->url->link('account/login', 'language=' . $this->config->get('config_language'));
 
 		if (isset($this->request->post['email'])) {
 			$data['email'] = $this->request->post['email'];
@@ -65,17 +70,8 @@ class ControllerAccountForgotten extends Controller {
 	}
 
 	protected function validate() {
-		if (!isset($this->request->post['email'])) {
+		if ((utf8_strlen($this->request->post['email']) > 96) || !filter_var($this->request->post['email'], FILTER_VALIDATE_EMAIL)) {
 			$this->error['warning'] = $this->language->get('error_email');
-		} elseif (!$this->model_account_customer->getTotalCustomersByEmail($this->request->post['email'])) {
-			$this->error['warning'] = $this->language->get('error_email');
-		}
-		
-		// Check if customer has been approved.
-		$customer_info = $this->model_account_customer->getCustomerByEmail($this->request->post['email']);
-
-		if ($customer_info && !$customer_info['status']) {
-			$this->error['warning'] = $this->language->get('error_approved');
 		}
 
 		return !$this->error;
