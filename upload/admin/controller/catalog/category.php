@@ -314,7 +314,7 @@ class Category extends \Opencart\System\Engine\Controller {
 		} else {
 			$data['error_parent'] = '';
 		}
-		
+
 		$url = '';
 
 		if (isset($this->request->get['sort'])) {
@@ -409,12 +409,12 @@ class Category extends \Opencart\System\Engine\Controller {
 		$this->load->model('setting/store');
 
 		$data['stores'] = [];
-		
+
 		$data['stores'][] = [
 			'store_id' => 0,
 			'name'     => $this->language->get('text_default')
 		];
-		
+
 		$stores = $this->model_setting_store->getStores();
 
 		foreach ($stores as $store) {
@@ -481,7 +481,7 @@ class Category extends \Opencart\System\Engine\Controller {
 		} else {
 			$data['status'] = true;
 		}
-		
+
 		if (isset($this->request->post['category_seo_url'])) {
 			$data['category_seo_url'] = $this->request->post['category_seo_url'];
 		} elseif (!empty($category_info)) {
@@ -489,7 +489,7 @@ class Category extends \Opencart\System\Engine\Controller {
 		} else {
 			$data['category_seo_url'] = [];
 		}
-				
+
 		if (isset($this->request->post['category_layout'])) {
 			$data['category_layout'] = $this->request->post['category_layout'];
 		} elseif (!empty($category_info)) {
@@ -526,11 +526,11 @@ class Category extends \Opencart\System\Engine\Controller {
 
 		if (isset($this->request->get['category_id']) && $this->request->post['parent_id']) {
 			$results = $this->model_catalog_category->getPaths($this->request->post['parent_id']);
-			
+
 			foreach ($results as $result) {
 				if ($result['path_id'] == $this->request->get['category_id']) {
 					$this->error['parent'] = $this->language->get('error_parent');
-					
+
 					break;
 				}
 			}
@@ -557,7 +557,7 @@ class Category extends \Opencart\System\Engine\Controller {
 		if ($this->error && !isset($this->error['warning'])) {
 			$this->error['warning'] = $this->language->get('error_warning');
 		}
-		
+
 		return !$this->error;
 	}
 
